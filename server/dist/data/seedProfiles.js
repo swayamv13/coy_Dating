@@ -36,23 +36,17 @@ const profiles = [
 ];
 function seedProfiles() {
     const existingUsers = connection_1.db.prepare("SELECT COUNT(*) AS count FROM users").get();
+    if (existingUsers.count > 0)
+        return;
     const insertUser = connection_1.db.prepare("INSERT OR IGNORE INTO users (name, email) VALUES (?, ?)");
     const insertProfile = connection_1.db.prepare(`
     INSERT OR IGNORE INTO profiles (user_id, age, gender, bio, location, photo_url, interests)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
     const transaction = connection_1.db.transaction(() => {
-        insertUser.run("Test User", "test.user@example.com");
-        const testUser = connection_1.db.prepare("SELECT id FROM users WHERE email = ?").get("test.user@example.com");
-        insertProfile.run(testUser.id, 26, "Person", "I'm the Coy Discover test account, here to explore mutual matches.", "Bengaluru", "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde", JSON.stringify(["Technology", "Music", "Travel"]));
-        if (existingUsers.count === 0) {
-            for (const profile of profiles) {
-                const result = insertUser.run(profile.name, profile.email);
-                insertProfile.run(Number(result.lastInsertRowid), profile.age, profile.gender, profile.bio, profile.location, profile.photoUrl, JSON.stringify(profile.interests));
-            }
-            if (testUser.id !== 1) {
-                throw new Error("The temporary test user must have ID 1.");
-            }
+        for (const profile of profiles) {
+            const result = insertUser.run(profile.name, profile.email);
+            insertProfile.run(Number(result.lastInsertRowid), profile.age, profile.gender, profile.bio, profile.location, profile.photoUrl, JSON.stringify(profile.interests));
         }
     });
     transaction();

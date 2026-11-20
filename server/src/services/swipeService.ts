@@ -12,6 +12,24 @@ export interface SwipeResult {
 
 export class DuplicateSwipeError extends Error {}
 export class InvalidUserError extends Error {}
+export class IncompatibleProfileError extends Error {}
+
+interface MatchingProfile {
+  gender: string;
+  looking_for: string;
+}
+
+function preferenceMatches(lookingFor: string[], gender: string): boolean {
+  if (lookingFor.includes("Everyone")) return true;
+  const preference = gender === "Man"
+    ? "Men"
+    : gender === "Woman"
+      ? "Women"
+      : gender === "Non-binary"
+        ? "Non-binary"
+        : "Self-describe";
+  return lookingFor.includes(preference);
+}
 
 export function recordSwipe(
   swiperUserId: number,
@@ -22,12 +40,30 @@ export function recordSwipe(
     throw new InvalidUserError("A user cannot swipe on their own profile.");
   }
 
-  const targetUser = db.prepare(
-    "SELECT id FROM users WHERE id = ?",
-  ).get(targetUserId);
+  const targetUser = db.prepare(`
+    SELECT id FROM users WHERE id = ?
+  `).get(targetUserId);
 
   if (!targetUser) {
     throw new InvalidUserError("Target profile not found.");
+  }
+
+  const viewerProfile = db.prepare(`
+    SELECT gender, looking_for FROM profiles WHERE user_id = ?
+  `).get(swiperUserId) as MatchingProfile | undefined;
+  const targetProfile = db.prepare(`
+    SELECT gender, looking_for FROM profiles WHERE user_id = ?
+  `).get(targetUserId) as MatchingProfile | undefined;
+
+  if (!viewerProfile || !targetProfile) {
+    throw new InvalidUserError("A complete profile is required to swipe.");
+  }
+
+  if (
+    !preferenceMatches(JSON.parse(viewerProfile.looking_for) as string[], targetProfile.gender) ||
+    !preferenceMatches(JSON.parse(targetProfile.looking_for) as string[], viewerProfile.gender)
+  ) {
+    throw new IncompatibleProfileError("This profile does not match your mutual preferences.");
   }
 
   const duplicate = db.prepare(`

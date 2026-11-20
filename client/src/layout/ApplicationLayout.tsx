@@ -1,18 +1,34 @@
-import { Compass, Heart, House, UserRound } from 'lucide-react'
+import { Compass, Crown, Heart, House, LogOut, TrendingUp, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import BrandLogo from '../components/BrandLogo'
+import { useAuth } from '../context/useAuth'
 import { getMatches } from '../services/matchesApi'
 
 const navigationItems = [
   { to: '/', label: 'Home', icon: House },
   { to: '/discover', label: 'Discover', icon: Compass },
   { to: '/matches', label: 'Matches', icon: Heart },
+  { to: '/trending', label: 'Trends', icon: TrendingUp },
   { to: '/profile', label: 'My Profile', icon: UserRound },
 ]
 
 function ApplicationLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
   const [matchCount, setMatchCount] = useState(0)
+  const [logoutError, setLogoutError] = useState('')
+
+  const handleSignOut = async () => {
+    setLogoutError('')
+    try {
+      await signOut()
+      navigate('/login', { replace: true })
+    } catch {
+      setLogoutError('Sign out failed. Please try again.')
+    }
+  }
 
   useEffect(() => {
     const refreshMatchCount = async () => {
@@ -40,51 +56,81 @@ function ApplicationLayout() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <NavLink className="brand" to="/" aria-label="Coy Discover home">
-          coy<span>.</span>
+      <aside className="app-sidebar">
+        <NavLink className="brand" to="/" aria-label="Joy home">
+          <BrandLogo />
         </NavLink>
+        <p className="brand-tagline">Discover. Connect. Belong.</p>
 
-        <div className="topbar-actions">
-          <span className="demo-pill">INTERACTIVE DEMO · FICTIONAL PROFILES</span>
+        <nav className="main-nav" aria-label="Primary navigation">
+          {navigationItems.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) =>
+                `nav-item${isActive ? ' nav-item-active' : ''}`
+              }
+            >
+              <Icon size={18} strokeWidth={2.1} aria-hidden="true" />
+              <span>{label}</span>
+              {to === '/matches' && matchCount > 0 && (
+                <span className="nav-match-count" aria-label={`${matchCount} matches`}>
+                  {matchCount}
+                </span>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+
+        <section className="sidebar-premium" aria-label="Joy Plus">
+          <span className="sidebar-premium-icon"><Crown size={18} aria-hidden="true" /></span>
+          <strong>Joy Plus</strong>
+          <p>A little extra magic is on its way.</p>
+          <span className="coming-soon-pill">Coming soon</span>
+        </section>
+
+        <div className="sidebar-user">
           <NavLink className="account-avatar" to="/profile" aria-label="Open My Profile" title="Open My Profile">
-            S
+            {user?.name.slice(0, 1).toUpperCase() || 'U'}
           </NavLink>
-        </div>
-      </header>
-
-      <nav className="main-nav" aria-label="Primary navigation">
-        {navigationItems.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              `nav-item${isActive ? ' nav-item-active' : ''}`
-            }
+          <span className="sidebar-user-name">{user?.name || 'Your profile'}</span>
+          <button
+            className="sign-out-button"
+            type="button"
+            aria-label="Sign out"
+            title="Sign out"
+            onClick={() => void handleSignOut()}
           >
-            <Icon size={16} strokeWidth={2.2} aria-hidden="true" />
-            <span>{label}</span>
-            {to === '/matches' && matchCount > 0 && (
-              <span className="nav-match-count" aria-label={`${matchCount} matches`}>
-                {matchCount}
-              </span>
-            )}
+            <LogOut size={15} aria-hidden="true" />
+          </button>
+        </div>
+
+      </aside>
+
+      <div className="app-main">
+        <header className="topbar">
+          <NavLink className="mobile-brand" to="/" aria-label="Joy home">
+            <BrandLogo />
           </NavLink>
-        ))}
-      </nav>
+          <p className="topbar-welcome">
+            Welcome back{user?.name ? `, ${user.name}` : ''}
+          </p>
+          <button
+            className="topbar-sign-out"
+            type="button"
+            aria-label="Sign out"
+            onClick={() => void handleSignOut()}
+          >
+            <LogOut size={17} aria-hidden="true" />
+          </button>
+        </header>
 
-      <main className="app-content">
-        <Outlet />
-      </main>
-
-      <footer className="app-footer" aria-label="Application information">
-        <span>Private by design</span>
-        <span>Smooth swipe experience</span>
-        <span>Persistent demo data</span>
-        <span>Responsive layouts</span>
-        <span>Coy-inspired UI</span>
-      </footer>
+        {logoutError && <p className="layout-error" role="alert">{logoutError}</p>}
+        <main className="app-content">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

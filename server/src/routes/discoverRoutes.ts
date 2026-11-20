@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getDiscover } from "../controllers/discoverController";
-import { testUserMiddleware } from "../middleware/testUser";
+import { requireAuthentication } from "../middleware/auth";
 
 export const discoverRouter = Router();
 
-discoverRouter.get("/discover", testUserMiddleware, getDiscover);
+discoverRouter.get("/discover", requireAuthentication, getDiscover);

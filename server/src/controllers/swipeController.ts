@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import {
   DuplicateSwipeError,
+  IncompatibleProfileError,
   InvalidUserError,
   recordSwipe,
 } from "../services/swipeService";
@@ -22,7 +23,7 @@ export function postSwipe(request: Request, response: Response): void {
     return;
   }
 
-  const swiperUserId = response.locals.testUserId as number;
+  const swiperUserId = response.locals.userId as number;
 
   try {
     const result = recordSwipe(
@@ -45,6 +46,14 @@ export function postSwipe(request: Request, response: Response): void {
 
     if (error instanceof InvalidUserError) {
       response.status(400).json({
+        success: false,
+        error: error.message,
+      });
+      return;
+    }
+
+    if (error instanceof IncompatibleProfileError) {
+      response.status(403).json({
         success: false,
         error: error.message,
       });

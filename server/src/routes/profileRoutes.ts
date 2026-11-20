@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import multer from "multer";
 import { Router } from "express";
-import { testUserMiddleware } from "../middleware/testUser";
+import { requireAuthentication } from "../middleware/auth";
 import {
   getCurrentProfile,
   removeProfilePhoto,
@@ -36,7 +36,7 @@ const upload = multer({
 
 export const profileRouter = Router();
 
-profileRouter.get("/profile", testUserMiddleware, getCurrentProfile);
-profileRouter.put("/profile", testUserMiddleware, saveCurrentProfile);
-profileRouter.post("/profile/photo", testUserMiddleware, upload.single("photo"), saveProfilePhoto);
-profileRouter.delete("/profile/photo", testUserMiddleware, removeProfilePhoto);
+profileRouter.get("/profile", requireAuthentication, getCurrentProfile);
+profileRouter.put("/profile", requireAuthentication, saveCurrentProfile);
+profileRouter.post("/profile/photo", requireAuthentication, upload.single("photo"), saveProfilePhoto);
+profileRouter.delete("/profile/photo", requireAuthentication, removeProfilePhoto);

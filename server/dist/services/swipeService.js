@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InvalidUserError = exports.DuplicateSwipeError = void 0;
+exports.IncompatibleProfileError = exports.InvalidUserError = exports.DuplicateSwipeError = void 0;
 exports.recordSwipe = recordSwipe;
 const connection_1 = require("../database/connection");
 class DuplicateSwipeError extends Error {
@@ -9,13 +9,43 @@ exports.DuplicateSwipeError = DuplicateSwipeError;
 class InvalidUserError extends Error {
 }
 exports.InvalidUserError = InvalidUserError;
+class IncompatibleProfileError extends Error {
+}
+exports.IncompatibleProfileError = IncompatibleProfileError;
+function preferenceMatches(lookingFor, gender) {
+    if (lookingFor.includes("Everyone"))
+        return true;
+    const preference = gender === "Man"
+        ? "Men"
+        : gender === "Woman"
+            ? "Women"
+            : gender === "Non-binary"
+                ? "Non-binary"
+                : "Self-describe";
+    return lookingFor.includes(preference);
+}
 function recordSwipe(swiperUserId, targetUserId, action) {
     if (swiperUserId === targetUserId) {
         throw new InvalidUserError("A user cannot swipe on their own profile.");
     }
-    const targetUser = connection_1.db.prepare("SELECT id FROM users WHERE id = ?").get(targetUserId);
+    const targetUser = connection_1.db.prepare(`
+    SELECT id FROM users WHERE id = ?
+  `).get(targetUserId);
     if (!targetUser) {
         throw new InvalidUserError("Target profile not found.");
+    }
+    const viewerProfile = connection_1.db.prepare(`
+    SELECT gender, looking_for FROM profiles WHERE user_id = ?
+  `).get(swiperUserId);
+    const targetProfile = connection_1.db.prepare(`
+    SELECT gender, looking_for FROM profiles WHERE user_id = ?
+  `).get(targetUserId);
+    if (!viewerProfile || !targetProfile) {
+        throw new InvalidUserError("A complete profile is required to swipe.");
+    }
+    if (!preferenceMatches(JSON.parse(viewerProfile.looking_for), targetProfile.gender) ||
+        !preferenceMatches(JSON.parse(targetProfile.looking_for), viewerProfile.gender)) {
+        throw new IncompatibleProfileError("This profile does not match your mutual preferences.");
     }
     const duplicate = connection_1.db.prepare(`
     SELECT id FROM swipes

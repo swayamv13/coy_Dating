@@ -1,21 +1,9 @@
 import api from './api'
 import type { Profile } from '../types/Profile'
 
-export const TEMP_TEST_USER_ID = 1
-
-interface DiscoverProfileResponse {
-  id: number
-  name: string
-  age: number
-  location: string
-  bio: string
-  photoUrl: string
-  interests: string[]
-}
-
 interface DiscoverResponse {
   success: boolean
-  profiles: DiscoverProfileResponse[]
+  profiles: Profile[]
   pagination: {
     limit: number
     offset: number
@@ -38,19 +26,10 @@ export async function getDiscoverProfiles(): Promise<Profile[]> {
     '/api/discover',
     {
       params: { limit: 30, offset: 0 },
-      headers: { 'x-user-id': TEMP_TEST_USER_ID },
     },
   )
 
-  return response.data.profiles.map((profile) => ({
-    id: profile.id,
-    name: profile.name,
-    age: profile.age,
-    location: profile.location,
-    bio: profile.bio,
-    interests: profile.interests,
-    photoUrl: profile.photoUrl,
-  }))
+  return response.data.profiles
 }
 
 export async function submitSwipe(
@@ -60,7 +39,6 @@ export async function submitSwipe(
   const response = await api.post<SwipeResponse>(
     '/api/swipes',
     { targetUserId, action },
-    { headers: { 'x-user-id': TEMP_TEST_USER_ID } },
   )
 
   return response.data

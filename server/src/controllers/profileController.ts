@@ -7,14 +7,17 @@ import { getProfile, updateProfile, updateProfilePhoto } from "../services/profi
 const profileSchema = z.object({
   name: z.string().trim().min(1).max(35),
   age: z.number().int().min(18).max(99),
+  gender: z.string().trim().min(1).max(40),
+  lookingFor: z.array(z.enum(["Men", "Women", "Non-binary", "Self-describe", "Everyone"]))
+    .min(1).max(5),
   location: z.string().trim().min(1).max(45),
-  bio: z.string().trim().min(1).max(150),
+  bio: z.string().trim().max(150).default(""),
   photoCaption: z.string().trim().max(90).default(""),
   interests: z.array(z.string().trim().min(1).max(30)).max(12),
 });
 
 export function getCurrentProfile(request: Request, response: Response): void {
-  const userId = response.locals.testUserId as number;
+  const userId = response.locals.userId as number;
   const profile = getProfile(userId);
 
   if (!profile) {
@@ -36,7 +39,7 @@ export function saveCurrentProfile(request: Request, response: Response): void {
     return;
   }
 
-  const userId = response.locals.testUserId as number;
+  const userId = response.locals.userId as number;
   const profile = updateProfile(userId, parsed.data);
 
   if (!profile) {
@@ -53,7 +56,7 @@ export function saveProfilePhoto(request: Request, response: Response): void {
     return;
   }
 
-  const userId = response.locals.testUserId as number;
+  const userId = response.locals.userId as number;
   const previousProfile = getProfile(userId);
   const photoUrl = `/uploads/profiles/${request.file.filename}`;
   const profile = updateProfilePhoto(userId, photoUrl);
@@ -77,7 +80,7 @@ export function saveProfilePhoto(request: Request, response: Response): void {
 }
 
 export function removeProfilePhoto(request: Request, response: Response): void {
-  const userId = response.locals.testUserId as number;
+  const userId = response.locals.userId as number;
   const profile = getProfile(userId);
 
   if (!profile) {

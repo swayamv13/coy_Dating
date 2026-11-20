@@ -1,5 +1,6 @@
-import { MapPin } from 'lucide-react'
+import { Heart, MapPin, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { MatchProfile } from '../services/matchesApi'
 
 interface MatchCardProps {
@@ -33,6 +34,10 @@ function MatchCard({ match }: MatchCardProps) {
             onError={() => setImageFailed(true)}
           />
         )}
+        <span className="match-mutual-badge">
+          <Heart size={12} fill="currentColor" aria-hidden="true" />
+          Mutual
+        </span>
       </div>
 
       <div className="match-card-info">
@@ -46,6 +51,10 @@ function MatchCard({ match }: MatchCardProps) {
             <li key={interest}>{interest}</li>
           ))}
         </ul>
+        <Link className="match-message-link" to={`/matches/${match.matchId}`}>
+          <MessageCircle size={15} aria-hidden="true" />
+          Chat
+        </Link>
       </div>
     </article>
   )

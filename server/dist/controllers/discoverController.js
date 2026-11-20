@@ -17,7 +17,7 @@ function getDiscover(request, response) {
         });
         return;
     }
-    const currentUserId = response.locals.testUserId;
+    const currentUserId = response.locals.userId;
     const { limit, offset } = parsed.data;
     const result = (0, discoverService_1.getDiscoverProfiles)(currentUserId, limit, offset);
     response.json({

@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { postSwipe } from "../controllers/swipeController";
-import { testUserMiddleware } from "../middleware/testUser";
+import { requireAuthentication } from "../middleware/auth";
 
 export const swipeRouter = Router();
 
-swipeRouter.post("/swipes", testUserMiddleware, postSwipe);
-swipeRouter.post("/swipe", testUserMiddleware, postSwipe);
+swipeRouter.post("/swipes", requireAuthentication, postSwipe);
+swipeRouter.post("/swipe", requireAuthentication, postSwipe);

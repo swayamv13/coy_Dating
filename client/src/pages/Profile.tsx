@@ -16,6 +16,7 @@ const availableInterests = [
   'Books', 'Movies', 'Art', 'Sports', 'Cooking', 'Hiking',
   'Dance', 'Fashion', 'Coffee', 'Design', 'Writing', 'Gaming',
 ]
+const matchPreferences = ['Men', 'Women', 'Non-binary', 'Self-describe', 'Everyone']
 
 export function ProfilePage() {
   const [profile, setProfile] = useState<EditableProfile | null>(null)
@@ -74,6 +75,20 @@ export function ProfilePage() {
     setDraft((current) => current ? { ...current, [field]: value } : current)
   }
 
+  const togglePreference = (preference: string) => {
+    if (preference === 'Everyone') {
+      updateDraft('lookingFor', ['Everyone'])
+      return
+    }
+    const selected = draft?.lookingFor.filter((item) => item !== 'Everyone') ?? []
+    updateDraft(
+      'lookingFor',
+      selected.includes(preference)
+        ? selected.filter((item) => item !== preference)
+        : [...selected, preference],
+    )
+  }
+
   const handlePhotoSelection = async (file: File | undefined) => {
     if (!file) return
 
@@ -130,8 +145,12 @@ export function ProfilePage() {
     event.preventDefault()
     if (!draft) return
 
-    if (!draft.name.trim() || !draft.location.trim() || !draft.bio.trim()) {
-      setFeedback('Name, location, and bio are required.')
+    if (!draft.name.trim() || !draft.location.trim() || !draft.gender.trim()) {
+      setFeedback('Name, gender, and location are required.')
+      return
+    }
+    if (draft.lookingFor.length === 0) {
+      setFeedback('Choose at least one match preference.')
       return
     }
     if (draft.age < 18 || draft.age > 99) {
@@ -145,6 +164,8 @@ export function ProfilePage() {
       const updated = await saveMyProfile({
         name: draft.name.trim(),
         age: draft.age,
+        gender: draft.gender,
+        lookingFor: draft.lookingFor,
         location: draft.location.trim(),
         bio: draft.bio.trim(),
         photoCaption: draft.photoCaption,
@@ -165,10 +186,12 @@ export function ProfilePage() {
         id: draft.id,
         name: draft.name || 'Your name',
         age: Number.isFinite(draft.age) ? draft.age : 18,
+        gender: draft.gender,
         location: draft.location || 'Your location',
         bio: draft.bio || 'Your bio will appear here.',
         photoUrl: photoPreview,
         interests: draft.interests,
+        photoCaption: draft.photoCaption,
       }
     : null
 
@@ -272,14 +295,39 @@ export function ProfilePage() {
               />
             </label>
             <label className="profile-field">
-              <span>Location <small>{draft.location.length}/45</small></span>
-              <input
-                value={draft.location}
-                maxLength={45}
-                onChange={(event) => updateDraft('location', event.target.value)}
-              />
+              <span>Gender</span>
+              <select
+                value={['Woman', 'Man', 'Non-binary'].includes(draft.gender) ? draft.gender : 'Self-describe'}
+                onChange={(event) => updateDraft('gender', event.target.value === 'Self-describe' ? '' : event.target.value)}
+              >
+                <option value="Woman">Woman</option>
+                <option value="Man">Man</option>
+                <option value="Non-binary">Non-binary</option>
+                <option value="Self-describe">Self-describe</option>
+              </select>
             </label>
           </div>
+
+          {draft.gender === '' || !['Woman', 'Man', 'Non-binary'].includes(draft.gender) ? (
+            <label className="profile-field">
+              <span>Describe your gender</span>
+              <input
+                required
+                maxLength={40}
+                value={draft.gender}
+                onChange={(event) => updateDraft('gender', event.target.value)}
+              />
+            </label>
+          ) : null}
+
+          <label className="profile-field">
+            <span>Location <small>{draft.location.length}/45</small></span>
+            <input
+              value={draft.location}
+              maxLength={45}
+              onChange={(event) => updateDraft('location', event.target.value)}
+            />
+          </label>
 
           <label className="profile-field">
             <span>Bio <small>{draft.bio.length}/150</small></span>
@@ -307,6 +355,24 @@ export function ProfilePage() {
               onChange={(interests) => updateDraft('interests', interests)}
             />
           </div>
+
+          <fieldset className="profile-field profile-preference-field">
+            <legend>Show me</legend>
+            <div className="preference-options">
+              {matchPreferences.map((preference) => (
+                <button
+                  key={preference}
+                  className={`preference-chip${draft.lookingFor.includes(preference) ? ' selected' : ''}`}
+                  type="button"
+                  aria-pressed={draft.lookingFor.includes(preference)}
+                  onClick={() => togglePreference(preference)}
+                >
+                  {preference}
+                </button>
+              ))}
+            </div>
+            <small>Profiles appear only when both people fit each other’s preferences.</small>
+          </fieldset>
 
           <button className="coy-button coy-button-primary profile-save-button" type="submit" disabled={saving}>
             {saving ? 'Saving...' : 'Save changes'}

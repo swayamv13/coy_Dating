@@ -17,7 +17,7 @@ function postSwipe(request, response) {
         });
         return;
     }
-    const swiperUserId = response.locals.testUserId;
+    const swiperUserId = response.locals.userId;
     try {
         const result = (0, swipeService_1.recordSwipe)(swiperUserId, parsed.data.targetUserId, parsed.data.action);
         response.status(parsed.data.action === "like" && result.mutualMatchCreated ? 201 : 200).json({
@@ -35,6 +35,13 @@ function postSwipe(request, response) {
         }
         if (error instanceof swipeService_1.InvalidUserError) {
             response.status(400).json({
+                success: false,
+                error: error.message,
+            });
+            return;
+        }
+        if (error instanceof swipeService_1.IncompatibleProfileError) {
+            response.status(403).json({
                 success: false,
                 error: error.message,
             });

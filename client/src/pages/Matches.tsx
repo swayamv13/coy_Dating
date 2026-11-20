@@ -44,9 +44,9 @@ function Matches() {
     <section className="matches-view" aria-labelledby="matches-title">
       <header className="matches-heading">
         <div>
-          <span className="eyebrow">Mutual connections</span>
-          <h1 id="matches-title">Your matches <span aria-hidden="true">♡</span></h1>
-          <p>Only people you've both liked appear here.</p>
+          <span className="eyebrow">The feeling is mutual</span>
+          <h1 id="matches-title">Your matches</h1>
+          <p>Good connections start with a hello.</p>
         </div>
         {!loading && !error && (
           <span className="match-count-pill">

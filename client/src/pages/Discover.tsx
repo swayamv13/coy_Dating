@@ -1,5 +1,5 @@
 import { motion, useMotionValue, useTransform } from 'framer-motion'
-import { Check, Heart, LockKeyhole, RotateCcw, Sparkles, X } from 'lucide-react'
+import { Check, Heart, RotateCcw, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProfileCard from '../components/ProfileCard'
@@ -17,8 +17,6 @@ function Discover() {
   const likeStampOpacity = useTransform(dragX, [20, 100], [0, 1])
   const passStampOpacity = useTransform(dragX, [-100, -20], [1, 0])
   const cardRotation = useTransform(dragX, [-120, 0, 120], [-12, 0, 12])
-  const [initialAvailableCount, setInitialAvailableCount] = useState(0)
-
   const loadProfiles = async () => {
     setLoading(true)
     setError('')
@@ -26,7 +24,6 @@ function Discover() {
     try {
       const discoveredProfiles = await getDiscoverProfiles()
       setProfiles(discoveredProfiles)
-      setInitialAvailableCount(discoveredProfiles.length)
     } catch {
       setError('We could not load Discover profiles. Please try again.')
     } finally {
@@ -42,7 +39,6 @@ function Discover() {
         const discoveredProfiles = await getDiscoverProfiles()
         if (cancelled) return
         setProfiles(discoveredProfiles)
-        setInitialAvailableCount(discoveredProfiles.length)
       } catch {
         if (!cancelled) setError('We could not load Discover profiles. Please try again.')
       } finally {
@@ -61,10 +57,6 @@ function Discover() {
   }, [feedback])
 
   const currentProfile = profiles[0]
-  const exploredThisSession = initialAvailableCount - profiles.length
-  const progressPercent = initialAvailableCount
-    ? Math.min(100, (exploredThisSession / initialAvailableCount) * 100)
-    : 0
 
   const handleSwipe = async (action: 'like' | 'pass') => {
     if (!currentProfile || processingRef.current) return
@@ -109,8 +101,9 @@ function Discover() {
   return (
     <section className="discover-view" aria-labelledby="discover-title">
       <header className="discover-heading">
-        <h1 id="discover-title">Discover your people.</h1>
-        <p>Swipe in secret. Match when it’s mutual.</p>
+        <span className="eyebrow">A little hello could change everything</span>
+        <h1 id="discover-title">Discover people</h1>
+        <p>Meet someone who feels like you.</p>
       </header>
 
       {feedback && (
@@ -186,45 +179,7 @@ function Discover() {
                 <Heart size={25} strokeWidth={2.4} aria-hidden="true" />
               </button>
             </div>
-            <p className="swipe-hint">Drag the card left or right, or tap a button</p>
           </section>
-
-          <aside className="discover-side" aria-label="Discovery information">
-            <section className="discover-panel privacy-panel">
-              <LockKeyhole size={20} strokeWidth={2.2} aria-hidden="true" />
-              <h2>Your likes stay private</h2>
-              <p>People never know you liked them unless they like you back. Only mutual likes become matches.</p>
-            </section>
-
-            <section className="discover-panel">
-              <div className="discovery-progress-heading">
-                <h2>Discovery progress</h2>
-                <span>{exploredThisSession} / {initialAvailableCount} explored</span>
-              </div>
-              <div
-                className="discovery-progress"
-                role="progressbar"
-                aria-label="Profiles explored this session"
-                aria-valuemin={0}
-                aria-valuemax={initialAvailableCount}
-                aria-valuenow={exploredThisSession}
-              >
-                <span style={{ width: `${progressPercent}%` }} />
-              </div>
-              <div className="how-row">
-                <span className="how-icon"><Heart size={13} aria-hidden="true" /></span>
-                Swipe right to like
-              </div>
-              <div className="how-row">
-                <span className="how-icon peach"><X size={13} aria-hidden="true" /></span>
-                Swipe left to pass
-              </div>
-              <div className="how-row">
-                <span className="how-icon gold"><Sparkles size={13} aria-hidden="true" /></span>
-                Match when it’s mutual
-              </div>
-            </section>
-          </aside>
         </div>
       )}
     </section>

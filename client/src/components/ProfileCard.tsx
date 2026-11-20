@@ -36,8 +36,8 @@ function ProfileCard({ profile, photoCaption }: ProfileCardProps) {
           </div>
         )}
 
-        {photoCaption?.trim() && (
-          <span className="profile-photo-caption">{photoCaption}</span>
+        {(photoCaption ?? profile.photoCaption)?.trim() && (
+          <span className="profile-photo-caption">{photoCaption ?? profile.photoCaption}</span>
         )}
       </div>
 
@@ -46,6 +46,7 @@ function ProfileCard({ profile, photoCaption }: ProfileCardProps) {
           <h2 className="profile-name">{profile.name}</h2>
           <span className="profile-age">{profile.age}</span>
         </div>
+        <span className="profile-gender">{profile.gender}</span>
 
         <p className="profile-location">
           <MapPin size={12} strokeWidth={2.4} aria-hidden="true" />

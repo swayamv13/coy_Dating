@@ -9,7 +9,7 @@ const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
 const multer_1 = __importDefault(require("multer"));
 const express_1 = require("express");
-const testUser_1 = require("../middleware/testUser");
+const auth_1 = require("../middleware/auth");
 const profileController_1 = require("../controllers/profileController");
 const uploadDirectory = node_path_1.default.resolve(process.cwd(), "public", "uploads", "profiles");
 node_fs_1.default.mkdirSync(uploadDirectory, { recursive: true });
@@ -33,7 +33,7 @@ const upload = (0, multer_1.default)({
     },
 });
 exports.profileRouter = (0, express_1.Router)();
-exports.profileRouter.get("/profile", testUser_1.testUserMiddleware, profileController_1.getCurrentProfile);
-exports.profileRouter.put("/profile", testUser_1.testUserMiddleware, profileController_1.saveCurrentProfile);
-exports.profileRouter.post("/profile/photo", testUser_1.testUserMiddleware, upload.single("photo"), profileController_1.saveProfilePhoto);
-exports.profileRouter.delete("/profile/photo", testUser_1.testUserMiddleware, profileController_1.removeProfilePhoto);
+exports.profileRouter.get("/profile", auth_1.requireAuthentication, profileController_1.getCurrentProfile);
+exports.profileRouter.put("/profile", auth_1.requireAuthentication, profileController_1.saveCurrentProfile);
+exports.profileRouter.post("/profile/photo", auth_1.requireAuthentication, upload.single("photo"), profileController_1.saveProfilePhoto);
+exports.profileRouter.delete("/profile/photo", auth_1.requireAuthentication, profileController_1.removeProfilePhoto);

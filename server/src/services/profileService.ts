@@ -4,6 +4,8 @@ export interface EditableProfile {
   id: number
   name: string
   age: number
+  gender: string
+  lookingFor: string[]
   location: string
   bio: string
   photoUrl: string
@@ -15,6 +17,8 @@ interface ProfileRow {
   id: number
   name: string
   age: number
+  gender: string
+  looking_for: string
   location: string
   bio: string
   photo_url: string
@@ -24,8 +28,8 @@ interface ProfileRow {
 
 export function getProfile(userId: number): EditableProfile | null {
   const row = db.prepare(`
-    SELECT u.id, u.name, p.age, p.location, p.bio, p.photo_url,
-           p.photo_caption, p.interests
+    SELECT u.id, u.name, p.age, p.gender, p.looking_for, p.location,
+           p.bio, p.photo_url, p.photo_caption, p.interests
     FROM users u
     JOIN profiles p ON p.user_id = u.id
     WHERE u.id = ?
@@ -37,6 +41,8 @@ export function getProfile(userId: number): EditableProfile | null {
     id: row.id,
     name: row.name,
     age: row.age,
+    gender: row.gender,
+    lookingFor: JSON.parse(row.looking_for) as string[],
     location: row.location,
     bio: row.bio,
     photoUrl: row.photo_url,
@@ -48,6 +54,8 @@ export function getProfile(userId: number): EditableProfile | null {
 export interface ProfileUpdate {
   name: string
   age: number
+  gender: string
+  lookingFor: string[]
   location: string
   bio: string
   photoCaption: string
@@ -59,10 +67,13 @@ export function updateProfile(userId: number, update: ProfileUpdate): EditablePr
     db.prepare("UPDATE users SET name = ? WHERE id = ?").run(update.name, userId)
     db.prepare(`
       UPDATE profiles
-      SET age = ?, location = ?, bio = ?, photo_caption = ?, interests = ?
+      SET age = ?, gender = ?, looking_for = ?, location = ?, bio = ?,
+          photo_caption = ?, interests = ?
       WHERE user_id = ?
     `).run(
       update.age,
+      update.gender,
+      JSON.stringify(update.lookingFor),
       update.location,
       update.bio,
       update.photoCaption,

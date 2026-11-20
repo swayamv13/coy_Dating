@@ -5,6 +5,7 @@ const connection_1 = require("../database/connection");
 function getMatchesForUser(userId) {
     const rows = connection_1.db.prepare(`
     SELECT
+      m.id AS match_id,
       u.id,
       u.name,
       p.age,
@@ -24,6 +25,7 @@ function getMatchesForUser(userId) {
     ORDER BY m.created_at DESC
   `).all(userId, userId, userId, userId);
     return rows.map((row) => ({
+        matchId: row.match_id,
         id: row.id,
         name: row.name,
         age: row.age,

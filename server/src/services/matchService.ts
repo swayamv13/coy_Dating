@@ -1,6 +1,7 @@
 import { db } from "../database/connection";
 
 export interface PublicMatch {
+  matchId: number;
   id: number;
   name: string;
   age: number;
@@ -12,6 +13,7 @@ export interface PublicMatch {
 }
 
 interface MatchRow {
+  match_id: number;
   id: number;
   name: string;
   age: number;
@@ -25,6 +27,7 @@ interface MatchRow {
 export function getMatchesForUser(userId: number): PublicMatch[] {
   const rows = db.prepare(`
     SELECT
+      m.id AS match_id,
       u.id,
       u.name,
       p.age,
@@ -45,6 +48,7 @@ export function getMatchesForUser(userId: number): PublicMatch[] {
   `).all(userId, userId, userId, userId) as MatchRow[];
 
   return rows.map((row) => ({
+    matchId: row.match_id,
     id: row.id,
     name: row.name,
     age: row.age,

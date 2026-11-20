@@ -18,7 +18,7 @@ export function getDiscover(request: Request, response: Response): void {
     return;
   }
 
-  const currentUserId = response.locals.testUserId as number;
+  const currentUserId = response.locals.userId as number;
   const { limit, offset } = parsed.data;
   const result = getDiscoverProfiles(currentUserId, limit, offset);
 
