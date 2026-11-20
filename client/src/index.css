@@ -3393,17 +3393,6 @@ textarea:focus-visible,
   font-size: 10px;
 }
 
-.premium-discover-link {
-  width: 37px;
-  height: 37px;
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  background: var(--coy-pink);
-}
-
 /* Discover */
 .discover-heading {
   margin-bottom: 18px;
