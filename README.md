@@ -119,6 +119,54 @@ Open the frontend and sign in with a phone number in international format, such 
 limited to five attempts, and can be requested once per minute. Phone-code login is
 disabled when `NODE_ENV=production`; configure an SMS provider before production use.
 
+## Deploying to Vercel
+
+The root `vercel.json` configures one Vercel project with two Services (currently in
+Vercel's Beta):
+
+- `client/`: Vite frontend, detected from its package manifest; `npm run build`
+  outputs `dist/`.
+- `server/`: Express backend; `src/index.ts` is the entrypoint and `npm run build`
+  runs the existing TypeScript build.
+
+Connect the repository with the **repository root** as the Vercel project root so the
+root `vercel.json` can define both service roots. The routing sends `/api` and
+`/api/*` to Express, `/uploads/*` and `/health` to their existing Express handlers,
+and all remaining paths to Vite. The frontend service rewrites client-side routes to
+`index.html`. The frontend uses same-origin `/api` requests, so leave
+`VITE_API_BASE_URL` unset or empty; do not put a guessed backend URL in it.
+
+Configure these values in Vercel Project Settings > Environment Variables, not in
+`vercel.json` or source control:
+
+- `JWT_SECRET`: a private random secret of at least 32 characters. Generate it with
+  `node -p "require('node:crypto').randomBytes(32).toString('hex')"`; do not reuse
+  the example value above.
+- `CLIENT_ORIGINS`: the comma-separated, exact `https://` origins assigned to the
+  deployment (and any custom domain). Set this after the Vercel domain is known; the
+  backend currently defaults to localhost origins. Preview origins also need to be
+  allowed if browser requests from previews are to work.
+- Ensure deployed backend runtimes use `NODE_ENV=production`. The local fixed OTP
+  `12345` is only disabled when this value is exactly `production`.
+
+### Production blockers
+
+The Services configuration does not make the current local persistence production
+safe. Resolve these before relying on a deployment for real users:
+
+- The backend creates and writes a `better-sqlite3` database under `server/data/`.
+  Vercel function files are not durable writable storage; an SQLite file there
+  cannot provide shared, persistent user data. Move persistence to a managed
+  database before production use.
+- Profile photos are written to local disk with Multer and served from
+  `public/uploads/`. Those writes are not durable on Vercel, and filesystem-backed
+  `express.static()` is not a suitable deployed upload store. Use durable object
+  storage and update the upload/URL handling before relying on profile photos.
+- Production phone-code requests return HTTP 503 until an SMS provider is
+  configured. The local `12345` code is not a production authentication method.
+
+These are application/runtime limitations, not solved by routing or build settings.
+
 ## Build Commands
 
 Build the frontend:
